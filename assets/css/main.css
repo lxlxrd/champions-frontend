@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tes styles personnalisés */
+body {
+  font-family: "Roboto", sans-serif;
+}
