@@ -6,6 +6,8 @@
 .cache
 dist
 
+
+
 # Node dependencies
 node_modules
 
@@ -17,7 +19,8 @@ logs
 .DS_Store
 .fleet
 .idea
-
+.vscode/
+*.swp
 # Local env files
 # .env
 # .env.*
