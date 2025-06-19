@@ -1,47 +1,67 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-// useAuth.ts
 export function useAuth() {
   const authStore = useAuthStore();
-  const csrf = async () => {
+
+  const setAuthHeader = () => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
+    }
+  };
+
+  const getCsrfCookie = async () => {
     await axios.get("http://localhost:8000/sanctum/csrf-cookie", {
       withCredentials: true,
     });
   };
 
-  const login = async (email: string, password: string, keepLoggedIn = false) => {
-    await csrf();
+  const getXsrfToken = () => {
+    const cookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("XSRF-TOKEN="));
+    return cookie ? decodeURIComponent(cookie.split("=")[1]) : null;
+  };
 
-    const csrfToken = decodeURIComponent(
-      document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1] || ""
-    );
+  const login = async (
+    email: string,
+    password: string,
+    keepLoggedIn = false
+  ) => {
+    await getCsrfCookie();
+
+    const xsrfToken = getXsrfToken();
 
     const { data } = await axios.post(
       "http://localhost:8000/login",
-      { email, password, keepLoggedIn, },
+      { email, password, keepLoggedIn },
       {
         withCredentials: true,
         headers: {
-          "X-XSRF-TOKEN": csrfToken,
-          Accept: "application/json",
+          "X-XSRF-TOKEN": xsrfToken,
         },
       }
     );
 
-    return data; // { redirect, role }
+    if (data.token) {
+      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem("user_role", data.role);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+    }
+
+    authStore.setUser(data.user);
+    authStore.setRole(data.role);
+    return data;
   };
 
-  const fetchUser = async (role: string) => {
-    const csrfToken = decodeURIComponent(
-      document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1] || ""
-    );
+  const fetchUser = async () => {
+    setAuthHeader();
+
+    const role = localStorage.getItem("user_role");
+    if (!role) throw new Error("Missing role");
 
     const url =
       role === "admin"
@@ -50,22 +70,18 @@ export function useAuth() {
 
     const { data } = await axios.get(url, {
       withCredentials: true,
-      headers: {
-        "X-XSRF-TOKEN": csrfToken,
-        Accept: "application/json",
-      },
     });
 
+    authStore.setUser(data);
+    authStore.setRole(role);
     return data;
   };
 
   const logout = async () => {
-    const csrfToken = decodeURIComponent(
-      document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1] || ""
-    );
+    setAuthHeader();
+
+    await getCsrfCookie();
+    const xsrfToken = getXsrfToken();
 
     try {
       await axios.post(
@@ -74,22 +90,36 @@ export function useAuth() {
         {
           withCredentials: true,
           headers: {
-            "X-XSRF-TOKEN": csrfToken,
-            Accept: "application/json",
+            "X-XSRF-TOKEN": xsrfToken,
           },
         }
       );
-
-      authStore.clearUser(); // Réinitialise les données utilisateur
-      navigateTo("/SignIn");
     } catch (err) {
-      console.error("Logout failed", err);
+      console.warn("Logout failed, cleanup anyway", err);
+    }
+
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_role");
+    delete axios.defaults.headers.common["Authorization"];
+    authStore.clearUser();
+
+    navigateTo("/SignIn");
+  };
+
+  const initAuth = async () => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      setAuthHeader();
+      try {
+        await fetchUser();
+      } catch (err) {
+        console.warn("Token invalid or expired, logging out");
+        await logout();
+      }
+    } else {
+      navigateTo("/SignIn");
     }
   };
 
-  return {
-    login,
-    fetchUser,
-    logout,
-  };
+  return { login, fetchUser, logout, initAuth };
 }

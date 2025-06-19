@@ -9,13 +9,18 @@
         <p class="form-subtitle">Please login to continue to your account.</p>
 
         <form @submit.prevent="loginUser">
-          <div v-if="errorMessage" class="alert alert-danger">
-            {{ errorMessage }}
+          <div v-if="globalError" class="alert alert-danger">
+            {{ globalError }}
           </div>
 
           <div class="form-group">
             <label>Email</label>
-            <input type="email" v-model="form.email" placeholder="Enter your email" />
+            <input
+              type="email"
+              v-model="form.email"
+              placeholder="Enter your email"
+              :disabled="showIsLoading"
+            />
           </div>
 
           <div class="form-group password-group">
@@ -24,6 +29,7 @@
               :type="showPassword ? 'text' : 'password'"
               v-model="form.password"
               placeholder="Enter your password"
+              :disabled="showIsLoading"
             />
             <span class="toggle-password" @click="showPassword = !showPassword">
               <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
@@ -31,7 +37,12 @@
           </div>
 
           <div class="form-check mb-3">
-            <input type="checkbox" v-model="keepLoggedIn" id="keepLoggedIn" />
+            <input
+              type="checkbox"
+              v-model="keepLoggedIn"
+              id="keepLoggedIn"
+              :disabled="showIsLoading"
+            />
             <label for="keepLoggedIn">Keep me logged in</label>
           </div>
 
@@ -43,7 +54,6 @@
             <span v-else>Sign in</span>
           </button>
 
-          <!-- Resend Verification Link -->
           <button
             v-if="showResendVerification"
             class="btn-resend mt-3"
@@ -70,65 +80,58 @@ import { ref } from "vue";
 import { useAuth } from "~/composables/useAuth";
 
 definePageMeta({
+  layout: "guest",
   middleware: ["$guest"],
 });
-
-const showIsLoading = ref(false);
 
 const form = ref({
   email: "",
   password: "",
 });
-const errorList = ref({});
 const globalError = ref("");
 const showPassword = ref(false);
 const { login, fetchUser } = useAuth();
 const authStore = useAuthStore();
 
-const isLoading = ref(false);
+const showIsLoading = ref(false);
 const showResendVerification = ref(false);
+const isSending = ref(false);
 
-
-const keepLoggedIn = ref(
-  localStorage.getItem("keepLoggedIn") === "true" // Récupération automatique
-);
-
-localStorage.setItem("keepLoggedIn", keepLoggedIn.value ? "true" : "false");
+const keepLoggedIn = ref(localStorage.getItem("keepLoggedIn") === "true");
 
 const loginUser = async () => {
-  errorList.value = {};
   globalError.value = "";
   showIsLoading.value = true;
   try {
-    const loginResponse = await login(form.value.email, form.value.password, keepLoggedIn.value);
-    console.log("Login success:", loginResponse);
+    localStorage.setItem("keepLoggedIn", keepLoggedIn.value ? "true" : "false");
 
-    const userData = await fetchUser(loginResponse.role);
+    const loginResponse = await login(
+      form.value.email,
+      form.value.password,
+      keepLoggedIn.value
+    );
 
-    if (loginResponse.role === "admin") {
-      window.location.href = loginResponse.redirect;
+    localStorage.setItem("user_role", loginResponse.role);
+
+    await fetchUser(loginResponse.role);
+
+    if (loginResponse.redirect.startsWith("http")) {
+      // URL externe
+      window.location.href = loginResponse.redirect; // si tu veux forcer un rechargement externe
+      // OU
+      navigateTo(loginResponse.redirect, { external: true }); // plus propre
     } else {
-      authStore.setUser(userData);
+      // URL interne
       navigateTo(loginResponse.redirect);
     }
-  } catch (error) {
-    if (error.response?.status === 422) {
-      errorList.value = error.response.data.errors;
-    } else if (error.response?.status === 401) {
+  } catch (err) {
+    if (err.response?.status === 401) {
       globalError.value = "Invalid credentials.";
     } else {
-      globalError.value = "Unexpected error: " + error.message;
+      globalError.value = "Unexpected error: " + err.message;
     }
   } finally {
     showIsLoading.value = false;
-  }
-
-
-
-  if (keepLoggedIn.value) {
-    localStorage.setItem("keepLoggedIn", "true");
-  } else {
-    localStorage.removeItem("keepLoggedIn");
   }
 };
 </script>

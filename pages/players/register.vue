@@ -213,6 +213,7 @@ import { ref } from "vue";
 import axios from "axios";
 
 definePageMeta({
+  layout: "guest",
   middleware: ["$guest"],
 });
 
@@ -361,18 +362,14 @@ async function registerUser() {
         "X-XSRF-TOKEN": csrfToken,
       },
     });
-    // if (userResponse.data.role === "admin") {
-    //   navigateTo("/");
-    // } else {
+   
     navigateTo("/user-dashboard");
-    // }
   } catch (err) {
     console.error("Failed to fetch user after registration:", err);
   } finally {
     showIsLoading.value = false;
   }
 
-  // navigateTo("/user-dashboard");
 }
 </script>
 

@@ -6,7 +6,6 @@ interface User {
   first_name: string;
   last_name: string;
   email: string;
-
   // ajoute d'autres champs si besoin
 }
 
@@ -14,12 +13,21 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const role = ref<string | null>(null);
   const isLoggedIn = ref(false);
-  const isInitialized = ref(false); // nouvelle variable
+  const isInitialized = ref(false);
 
   function setUser(data: any) {
     user.value = data;
-    role.value = data.role ?? null;
+    // Si le backend renvoie le rôle dans user
+    if (data.role) {
+      role.value = data.role;
+      localStorage.setItem("user_role", data.role);
+    }
     isLoggedIn.value = true;
+  }
+
+  function setRole(newRole: string) {
+    role.value = newRole;
+    localStorage.setItem("user_role", newRole);
   }
 
   function clearUser() {
@@ -28,6 +36,7 @@ export const useAuthStore = defineStore("auth", () => {
     isLoggedIn.value = false;
     isInitialized.value = false;
     localStorage.removeItem("keepLoggedIn");
+    localStorage.removeItem("user_role");
   }
 
   async function init() {
@@ -49,5 +58,14 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  return { user, role, isLoggedIn, setUser, clearUser, init, isInitialized };
+  return {
+    user,
+    role,
+    isLoggedIn,
+    isInitialized,
+    setUser,
+    setRole,
+    clearUser,
+    init,
+  };
 });
