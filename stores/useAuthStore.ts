@@ -6,51 +6,49 @@ interface User {
   first_name: string;
   last_name: string;
   email: string;
+  email_verified_at?: string | null;
   // ajoute d'autres champs si besoin
 }
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
-  const role = ref<string | null>(null);
   const isLoggedIn = ref(false);
   const isInitialized = ref(false);
 
-  function setUser(data: any) {
+  function setUser(data: User) {
     user.value = data;
-    // Si le backend renvoie le rôle dans user
-    if (data.role) {
-      role.value = data.role;
-      localStorage.setItem("user_role", data.role);
-    }
     isLoggedIn.value = true;
-  }
-
-  function setRole(newRole: string) {
-    role.value = newRole;
-    localStorage.setItem("user_role", newRole);
   }
 
   function clearUser() {
     user.value = null;
-    role.value = null;
     isLoggedIn.value = false;
     isInitialized.value = false;
     localStorage.removeItem("keepLoggedIn");
-    localStorage.removeItem("user_role");
   }
 
   async function init() {
     try {
       const config = useRuntimeConfig();
+
       const userData = await $fetch<User>(`${config.public.apiBase}/api/user`, {
         credentials: "include",
+        headers: {
+          Accept: "application/json",
+        },
       });
 
-      if (userData?.email) {
-        setUser(userData);
-      } else {
+      if ((userData as any).role === "admin") {
         clearUser();
+        return navigateTo("http://localhost:8000/admin/login"); // ou juste /admin/login
       }
+
+      if (!userData.email_verified_at) {
+        clearUser();
+        return navigateTo(`/verify-email`);
+      }
+
+      setUser(userData);
     } catch (error) {
       clearUser();
     } finally {
@@ -60,11 +58,9 @@ export const useAuthStore = defineStore("auth", () => {
 
   return {
     user,
-    role,
     isLoggedIn,
     isInitialized,
     setUser,
-    setRole,
     clearUser,
     init,
   };

@@ -8,11 +8,9 @@
         <p class="form-subtitle">Sign up to enjoy the feature of Revolutie</p>
       </div>
 
-      {{ user }}
       <!-- Formulaire -->
       <div class="form-container card">
         <div class="card-body">
-          <!-- Radio Switch -->
           <div class="mb-4 d-flex gap-4">
             <div class="form-check">
               <input
@@ -37,15 +35,11 @@
           </div>
 
           <form @submit.prevent="registerUser">
-            <!-- Erreur globale si données manquantes -->
-            <div v-if="globalError" class="alert alert-danger">
-              {{ globalError }}
-            </div>
+            <div v-if="globalError" class="alert alert-danger">{{ globalError }}</div>
 
-            <!-- Section Parent -->
+            <!-- Parent Form -->
             <div v-if="formSection === 'parent'">
               <h5 class="mb-3 text-dark">Parent Information</h5>
-
               <div class="mb-3" v-for="field in parentFields" :key="field.key">
                 <label class="form-label fw-medium text-dark">{{ field.label }}</label>
                 <input
@@ -55,16 +49,9 @@
                   v-model="form.parent[field.key]"
                 />
                 <span class="text-danger" v-if="errorList[`parent.${field.key}`]">
-                  <!-- {{ errorList[`parent.${field.key}`]}} -->
-                  {{
-                    errorList[`parent.${field.key}`][0]
-                      .replace("parent.", "")
-                      .replace("player.", "")
-                  }}
+                  {{ errorList[`parent.${field.key}`][0] }}
                 </span>
               </div>
-
-              <!-- Password -->
               <div class="mb-3 position-relative">
                 <label class="form-label fw-medium text-dark">Password</label>
                 <input
@@ -76,17 +63,7 @@
                 <span class="eye-icon" @click="togglePassword">
                   <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                 </span>
-
-                <span class="text-danger" v-if="errorList['parent.password']">
-                  {{
-                    errorList["parent.password"][0]
-                      .replace("parent.", "")
-                      .replace("player.", "")
-                  }}
-                </span>
               </div>
-
-              <!-- Confirm Password -->
               <div class="mb-3 position-relative">
                 <label class="form-label fw-medium text-dark">Confirm Password</label>
                 <input
@@ -104,10 +81,9 @@
               </div>
             </div>
 
-            <!-- Section Joueur -->
+            <!-- Player Form -->
             <div v-if="formSection === 'player'">
               <h5 class="mb-3 text-dark">Player Information</h5>
-
               <div class="mb-3" v-for="field in playerFields" :key="field.key">
                 <label class="form-label fw-medium text-dark">{{ field.label }}</label>
                 <input
@@ -117,16 +93,9 @@
                   v-model="form.player[field.key]"
                 />
                 <span class="text-danger" v-if="errorList[`player.${field.key}`]">
-                  <!-- {{ errorList[`player.${field.key}`] }} -->
-                  {{
-                    errorList[`player.${field.key}`][0]
-                      .replace("parent.", "")
-                      .replace("player.", "")
-                  }}
+                  {{ errorList[`player.${field.key}`][0] }}
                 </span>
               </div>
-
-              <!-- Gender -->
               <div class="mb-3">
                 <label class="form-label fw-medium text-dark">Gender*</label>
                 <div class="d-flex gap-4">
@@ -137,18 +106,13 @@
                       :id="'gender_' + g.value"
                       :value="g.value"
                       v-model="form.player.gender"
-                      name="gender"
                     />
-                    <label
-                      class="form-check-label text-dark"
-                      :for="'gender_' + g.value"
-                      >{{ g.label }}</label
-                    >
+                    <label class="form-check-label text-dark" :for="'gender_' + g.value">
+                      {{ g.label }}
+                    </label>
                   </div>
                 </div>
               </div>
-
-              <!-- Location -->
               <div class="mb-3">
                 <label class="form-label fw-medium text-dark">Preferred Location*</label>
                 <div class="d-flex gap-4">
@@ -159,16 +123,13 @@
                       :id="'location_' + loc"
                       :value="loc.toLowerCase()"
                       v-model="form.player.preferred_location"
-                      name="preferred_location"
                     />
-                    <label class="form-check-label text-dark" :for="'location_' + loc">{{
-                      loc
-                    }}</label>
+                    <label class="form-check-label text-dark" :for="'location_' + loc">
+                      {{ loc }}
+                    </label>
                   </div>
                 </div>
               </div>
-
-              <!-- Jersey -->
               <div class="mb-3">
                 <label class="form-label fw-medium text-dark">Jersey Size*</label>
                 <div class="d-flex gap-4">
@@ -179,11 +140,10 @@
                       :id="'jersey_' + size"
                       :value="size"
                       v-model="form.player.jersey_size"
-                      name="jersey_size"
                     />
-                    <label class="form-check-label text-dark" :for="'jersey_' + size">{{
-                      size
-                    }}</label>
+                    <label class="form-check-label text-dark" :for="'jersey_' + size">
+                      {{ size }}
+                    </label>
                   </div>
                 </div>
               </div>
@@ -191,8 +151,7 @@
 
             <button class="custom-submit" type="submit" :disabled="showIsLoading">
               <span v-if="showIsLoading">
-                <span class="spinner"></span>
-                Registering...
+                <span class="spinner"></span> Registering...
               </span>
               <span v-else>Register</span>
             </button>
@@ -200,7 +159,6 @@
         </div>
       </div>
 
-      <!-- Image -->
       <div class="image-container">
         <img src="/images/kids3.png" alt="Register Banner" />
       </div>
@@ -217,6 +175,21 @@ definePageMeta({
   middleware: ["$guest"],
 });
 
+const formSection = ref("parent");
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const errorList = ref({});
+const globalError = ref("");
+const showIsLoading = ref(false);
+
+const locations = ["Courtice", "Bowmanville", "Newcastle"];
+const jerseySizes = ["YS", "YM", "YL"];
+const genders = [
+  { label: "Female", value: "female" },
+  { label: "Male", value: "male" },
+  { label: "Other", value: "other" },
+];
+
 const parentFields = [
   {
     label: "Parent First Name",
@@ -232,12 +205,7 @@ const parentFields = [
   },
   { label: "Email", key: "email", placeholder: "Enter Email", type: "email" },
   { label: "Phone", key: "phone", placeholder: "Enter Phone", type: "text" },
-  {
-    label: "Address",
-    key: "address",
-    placeholder: "Enter Address",
-    type: "text",
-  },
+  { label: "Address", key: "address", placeholder: "Enter Address", type: "text" },
 ];
 
 const playerFields = [
@@ -255,26 +223,6 @@ const playerFields = [
   },
   { label: "Birth Date", key: "birth_date", placeholder: "", type: "date" },
 ];
-
-const locations = ["Courtice", "Bowmanville", "Newcastle"];
-const jerseySizes = ["YS", "YM", "YL"];
-const genders = [
-  { label: "Female", value: "female" },
-  { label: "Male", value: "male" },
-  { label: "Other", value: "other" },
-];
-
-const showIsLoading = ref(false);
-
-const formSection = ref("parent");
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
-const errorList = ref({});
-const globalError = ref("");
-
-const togglePassword = () => (showPassword.value = !showPassword.value);
-const toggleConfirmPassword = () =>
-  (showConfirmPassword.value = !showConfirmPassword.value);
 
 const form = ref({
   parent: {
@@ -296,25 +244,20 @@ const form = ref({
   },
 });
 
-// const { refreshUser } = useSanctum();
+const togglePassword = () => (showPassword.value = !showPassword.value);
+const toggleConfirmPassword = () =>
+  (showConfirmPassword.value = !showConfirmPassword.value);
 
 async function registerUser() {
   errorList.value = {};
   globalError.value = "";
   showIsLoading.value = true;
-  const user = ref();
 
   if (form.value.parent.password !== form.value.parent.password_confirmation) {
     errorList.value["password_mismatch"] = "Passwords do not match.";
+    showIsLoading.value = false;
     return;
   }
-
-  const csrfToken = decodeURIComponent(
-    document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1] || ""
-  );
 
   try {
     await axios.get("http://localhost:8000/sanctum/csrf-cookie", {
@@ -328,48 +271,34 @@ async function registerUser() {
         ?.split("=")[1] || ""
     );
 
-    const response = await axios.post(
-      "http://localhost:8000/register",
-      {
-        parent: form.value.parent,
-        player: form.value.player,
+    const payload = {
+      parent: form.value.parent,
+      player: form.value.player,
+    };
+
+    await axios.post("http://localhost:8000/register", payload, {
+      withCredentials: true,
+      headers: { "X-XSRF-TOKEN": csrfToken },
+    });
+
+    Object.keys(form.value.parent).forEach((k) => (form.value.parent[k] = ""));
+    Object.keys(form.value.player).forEach((k) => (form.value.player[k] = ""));
+
+    navigateTo({
+      path: "/verify-email",
+      query: {
+        role: "parent",
       },
-      {
-        withCredentials: true,
-        headers: {
-          "X-XSRF-TOKEN": csrfToken,
-        },
-      }
-    );
-
-    alert(response.data.message);
-
-    Object.keys(form.value.parent).forEach((key) => (form.value.parent[key] = ""));
-    Object.keys(form.value.player).forEach((key) => (form.value.player[key] = ""));
+    });
   } catch (error) {
     if (error.response?.status === 422) {
       errorList.value = error.response.data.errors;
-      console.log("Erreurs de validation :", errorList.value);
     } else {
-      globalError.value = "Erreur inattendue : " + error.message;
+      globalError.value = "Unexpected error: " + error.message;
     }
-  }
-
-  try {
-    const userResponse = await axios.get("http://localhost:8000/api/user", {
-      withCredentials: true,
-      headers: {
-        "X-XSRF-TOKEN": csrfToken,
-      },
-    });
-   
-    navigateTo("/user-dashboard");
-  } catch (err) {
-    console.error("Failed to fetch user after registration:", err);
   } finally {
     showIsLoading.value = false;
   }
-
 }
 </script>
 
@@ -485,9 +414,26 @@ async function registerUser() {
   vertical-align: middle;
 }
 
+.alert-success {
+  font-size: 1.1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  background-color: #d4edda;
+  color: #155724;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Styles existants + success card */
+.success-card {
+  max-width: 500px;
+  margin: 100px auto;
+  background: #d4edda;
+  color: #155724;
+  border-radius: 8px;
 }
 </style>

@@ -134,7 +134,8 @@ export default defineNuxtConfig({
        * If set to false, the plugin will throw an 403 error.
        * @default '/'
        */
-      guestOnlyRedirect: "/user-dashboard",
+      guestOnlyRedirect: "",
+      // guestOnlyRedirect: "/user-dashboard",
 
       /**
        * URL to redirect to after a successful login.
@@ -148,7 +149,8 @@ export default defineNuxtConfig({
        * If set to false, no redirection occurs.
        * @default '/'
        */
-      redirectToAfterLogout: "/",
+      redirectToAfterLogout: "",
+      // redirectToAfterLogout: "/",
     },
   },
 });

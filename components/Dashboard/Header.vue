@@ -4,8 +4,8 @@
   >
     <!-- Message -->
     <div class="ms-4">
-      <h5 class="fw-bold mb-0">Hello Robert 👋🏼</h5>
-      <small class="text-muted">Good Morning</small>
+      <h5 class="fw-bold mb-0">Hello {{ fullName }}👋🏼</h5>
+      <!-- <small class="text-muted">Good Morning</small> -->
     </div>
 
     <!-- Input de recherche -->
@@ -28,9 +28,12 @@
       @click="toggleDropdown"
       style="cursor: pointer"
     >
-      <img src="" alt="User" class="rounded-circle" width="36" height="36" />
+      <i
+        class="fas fa-user rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary"
+        style="width: 36px; height: 36px; font-size: 18px"
+      />
       <div>
-        <div class="fw-bold">Robert Allen</div>
+        <div class="fw-bold">{{ fullName }}</div>
         <small class="text-muted">Parents</small>
       </div>
       <i class="fas fa-chevron-down text-muted"></i>
@@ -47,6 +50,22 @@
 
 <script setup>
 import { ref } from "vue";
+
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/useAuthStore";
+
+const { user } = storeToRefs(useAuthStore());
+
+// Nom complet dynamique
+const fullName = computed(() => {
+  if (!user.value) return "Invité";
+  return `${user.value.first_name} ${user.value.last_name}`;
+});
+
+// Rôle affiché (tu peux adapter)
+const userRole = computed(() => {
+  return "Parents";
+});
 
 const isDropdownOpen = ref(false);
 
@@ -118,6 +137,7 @@ const logout = () => {
   right: 0;
   top: 100%;
   margin-top: 8px;
+  margin-bottom: 24px;
   background: white;
   border-radius: 8px;
   border: none !important;

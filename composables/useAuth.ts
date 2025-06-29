@@ -46,34 +46,32 @@ export function useAuth() {
       }
     );
 
+    document.cookie = `keepLoggedIn=${keepLoggedIn}; path=/; max-age=${
+      keepLoggedIn ? 60 * 60 * 48 : 0
+    }`;
+
+    if (data.role === "admin") {
+      window.location.href = "http://localhost:8000/admin/login";
+      return;
+    }
+
     if (data.token) {
       localStorage.setItem("auth_token", data.token);
-      localStorage.setItem("user_role", data.role);
       axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
     }
 
     authStore.setUser(data.user);
-    authStore.setRole(data.role);
     return data;
   };
 
   const fetchUser = async () => {
     setAuthHeader();
 
-    const role = localStorage.getItem("user_role");
-    if (!role) throw new Error("Missing role");
-
-    const url =
-      role === "admin"
-        ? "http://localhost:8000/api/admin-user"
-        : "http://localhost:8000/api/user";
-
-    const { data } = await axios.get(url, {
+    const { data } = await axios.get("http://localhost:8000/api/user", {
       withCredentials: true,
     });
 
     authStore.setUser(data);
-    authStore.setRole(role);
     return data;
   };
 
@@ -99,11 +97,13 @@ export function useAuth() {
     }
 
     localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_role");
+    document.cookie =
+      "keepLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
     delete axios.defaults.headers.common["Authorization"];
     authStore.clearUser();
 
-    navigateTo("/SignIn");
+    window.location.href = "/SignIn";
   };
 
   const initAuth = async () => {

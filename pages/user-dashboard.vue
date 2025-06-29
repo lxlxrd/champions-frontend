@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid">
+  <div class="container-fluid mt-5">
     <div class="row g-4">
       <div class="col-md-8">
         <div class="row">
@@ -21,6 +21,10 @@
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: ["auth"],
+});
+
 import { useUserStore } from "~/stores/user";
 
 const { stats } = useUserStore();

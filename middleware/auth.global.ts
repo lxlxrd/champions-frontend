@@ -1,8 +1,9 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const authStore = useAuthStore();
 
+  
   // Ne pas exécuter sur les routes publiques
-  const publicRoutes = ["/SignIn", "/players/register"];
+  const publicRoutes = ["/SignIn", "/players/register", "/verify-email"];
   if (publicRoutes.includes(to.path)) return;
 
   if (!authStore.isLoggedIn) {

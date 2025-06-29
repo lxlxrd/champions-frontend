@@ -5,7 +5,6 @@
     <div class="flex-grow-1 p-4">
       <!-- Composant d'en-tête dynamique -->
       <component :is="currentHeaderComponent" />
-
       <!-- Contenu de la page -->
       <slot />
     </div>

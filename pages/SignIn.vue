@@ -114,11 +114,11 @@ const loginUser = async () => {
     localStorage.setItem("user_role", loginResponse.role);
 
     await fetchUser(loginResponse.role);
+    
 
     if (loginResponse.redirect.startsWith("http")) {
       // URL externe
-      window.location.href = loginResponse.redirect; // si tu veux forcer un rechargement externe
-      // OU
+      window.location.href = loginResponse.redirect; 
       navigateTo(loginResponse.redirect, { external: true }); // plus propre
     } else {
       // URL interne
